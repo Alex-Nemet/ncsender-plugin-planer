@@ -256,16 +256,17 @@
     feedRate: 4826,
     plungeRate: 2413,
     spindleSpeed: 18000,
-    spindleDelay: 3,
+    spindleDelay: 6,
     stepDown: 1.27,
-    passExtension: 31.75,
+    passExtensionX: 31.75,
+    passExtensionY: 31.75,
     safeZ: 10.16,
     startCorner: 'bl',
     bitPreset: 'face-2.5',
     isImperial: true
   };
 
-  var DISTANCE_FIELDS = ['materialWidth', 'materialDepth', 'stockHeight', 'targetThickness', 'removeAmount', 'tapeThickness', 'bitDiameter', 'stepDown', 'passExtension', 'safeZ'];
+  var DISTANCE_FIELDS = ['materialWidth', 'materialDepth', 'stockHeight', 'targetThickness', 'removeAmount', 'tapeThickness', 'bitDiameter', 'stepDown', 'passExtensionX', 'passExtensionY', 'safeZ'];
   var SPEED_FIELDS = ['feedRate', 'plungeRate'];
 
   async function init() {
@@ -371,12 +372,17 @@
                     '<div class="validation-tooltip" id="stepDown-error"></div>' +
                   '</div>' +
                   '<div class="form-group">' +
-                    '<label for="passExtension">Pass Extension (<span class="du">' + du + '</span>)</label>' +
-                    '<input type="number" id="passExtension" step="any" value="' + settings.passExtension + '" required>' +
-                    '<div class="validation-tooltip" id="passExtension-error"></div>' +
+                    '<label for="passExtensionX">Extension X (<span class="du">' + du + '</span>)</label>' +
+                    '<input type="number" id="passExtensionX" step="any" value="' + settings.passExtensionX + '" required>' +
+                    '<div class="validation-tooltip" id="passExtensionX-error"></div>' +
                   '</div>' +
                 '</div>' +
-                '<div class="form-row single">' +
+                '<div class="form-row">' +
+                  '<div class="form-group">' +
+                    '<label for="passExtensionY">Extension Y (<span class="du">' + du + '</span>)</label>' +
+                    '<input type="number" id="passExtensionY" step="any" value="' + settings.passExtensionY + '" required>' +
+                    '<div class="validation-tooltip" id="passExtensionY-error"></div>' +
+                  '</div>' +
                   '<div class="form-group">' +
                     '<label for="safeZ">Safe Z (<span class="du">' + du + '</span>)</label>' +
                     '<input type="number" id="safeZ" step="any" value="' + settings.safeZ + '" required>' +
@@ -481,7 +487,8 @@
         plungeRate: { min: 1, max: 200, label: 'Plunge Rate' },
         spindleSpeed: { min: 1000, max: 30000, label: 'Spindle Speed' },
         stepDown: { min: 0.001, max: 1, label: 'Step Down' },
-        passExtension: { min: 0, max: 12, label: 'Pass Extension' },
+        passExtensionX: { min: 0, max: 12, label: 'Extension X' },
+        passExtensionY: { min: 0, max: 12, label: 'Extension Y' },
         safeZ: { min: 0.05, max: 4, label: 'Safe Z' }
       } : {
         materialWidth: { min: 10, max: 2500, label: 'Width X' },
@@ -495,7 +502,8 @@
         plungeRate: { min: 10, max: 5000, label: 'Plunge Rate' },
         spindleSpeed: { min: 1000, max: 30000, label: 'Spindle Speed' },
         stepDown: { min: 0.1, max: 25, label: 'Step Down' },
-        passExtension: { min: 0, max: 300, label: 'Pass Extension' },
+        passExtensionX: { min: 0, max: 300, label: 'Extension X' },
+        passExtensionY: { min: 0, max: 300, label: 'Extension Y' },
         safeZ: { min: 1, max: 100, label: 'Safe Z' }
       };
     }
@@ -646,7 +654,7 @@
       var bitDia = parseFloat(document.getElementById('bitDiameter').value);
       var pct = parseFloat(document.getElementById('stepoverPct').value);
       var stepDownVal = parseFloat(document.getElementById('stepDown').value);
-      var passExt = parseFloat(document.getElementById('passExtension').value);
+      var passExtY = parseFloat(document.getElementById('passExtensionY').value);
 
       var stepoverDist = bitDia * (pct / 100);
       var totalRemove, numPasses;
@@ -663,7 +671,7 @@
       if (isNaN(totalRemove) || totalRemove <= 0) totalRemove = 0;
       numPasses = totalRemove > 0 ? Math.ceil(totalRemove / stepDownVal) : 0;
 
-      var totalYDist = materialDepth + 2 * passExt;
+      var totalYDist = materialDepth + 2 * passExtY;
       var numRows = stepoverDist > 0 ? Math.ceil(totalYDist / stepoverDist) + 1 : 0;
 
       return {
@@ -743,7 +751,7 @@
       updateSummary();
     });
 
-    var allValidatedFields = ['materialWidth', 'materialDepth', 'stockHeight', 'targetThickness', 'removeAmount', 'bitDiameter', 'stepoverPct', 'feedRate', 'plungeRate', 'spindleSpeed', 'stepDown', 'passExtension', 'safeZ'];
+    var allValidatedFields = ['materialWidth', 'materialDepth', 'stockHeight', 'targetThickness', 'removeAmount', 'bitDiameter', 'stepoverPct', 'feedRate', 'plungeRate', 'spindleSpeed', 'stepDown', 'passExtensionX', 'passExtensionY', 'safeZ'];
     allValidatedFields.forEach(function(f) {
       var input = document.getElementById(f);
       if (input) {
@@ -771,7 +779,8 @@
       var feedRate = params.feedRate;
       var plungeRate = params.plungeRate;
       var stepDownVal = params.stepDown;
-      var passExt = params.passExtension;
+      var passExtX = params.passExtensionX;
+      var passExtY = params.passExtensionY;
       var safeZClearance = params.safeZ;
       var prec = isImperial ? 4 : 3;
 
@@ -798,10 +807,10 @@
       var xSign = (params.startCorner === 'bl' || params.startCorner === 'tl') ? 1 : -1;
       var ySign = (params.startCorner === 'bl' || params.startCorner === 'br') ? 1 : -1;
 
-      var xStart = -passExt * xSign;
-      var xEnd = (materialX + passExt) * xSign;
-      var yStart = -passExt * ySign;
-      var yEnd = (materialY + passExt) * ySign;
+      var xStart = -passExtX * xSign;
+      var xEnd = (materialX + passExtX) * xSign;
+      var yStart = -passExtY * ySign;
+      var yEnd = (materialY + passExtY) * ySign;
 
       var totalYDist = Math.abs(yEnd - yStart);
       var numRows = Math.ceil(totalYDist / stepover);
@@ -894,7 +903,8 @@
         spindleSpeed: parseFloat(document.getElementById('spindleSpeed').value),
         spindleDelay: parseInt(document.getElementById('spindleDelay').value) || 0,
         stepDown: parseFloat(document.getElementById('stepDown').value),
-        passExtension: parseFloat(document.getElementById('passExtension').value),
+        passExtensionX: parseFloat(document.getElementById('passExtensionX').value),
+        passExtensionY: parseFloat(document.getElementById('passExtensionY').value),
         safeZ: parseFloat(document.getElementById('safeZ').value),
         startCorner: currentCorner
       };
