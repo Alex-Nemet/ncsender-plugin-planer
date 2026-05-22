@@ -1,4 +1,4 @@
 ## What's Changed
 
-### 🔧 Improvements
-- Pass extension now automatically sets to 55% of the bit diameter when changing presets
+### 🐛 Bug Fixes
+- Fixed tape thickness calculation to correctly shift both start and end Z positions equally, ensuring accurate depth measurements when using tape for workpiece probing
