@@ -236,6 +236,13 @@
 
   var BASE_URL = resolveApiBaseUrl();
 
+  var BIT_PRESETS = [
+    { id: 'face-2.5', label: '2.5" Face Mill', bitDiameter: 63.5, stepoverPct: 70, feedRate: 4826, plungeRate: 2413, spindleSpeed: 18000, stepDown: 1.27 },
+    { id: 'end-0.5', label: '1/2" End Mill', bitDiameter: 12.7, stepoverPct: 50, feedRate: 2032, plungeRate: 1016, spindleSpeed: 18000, stepDown: 0.762 },
+    { id: 'end-0.25', label: '1/4" End Mill', bitDiameter: 6.35, stepoverPct: 40, feedRate: 1524, plungeRate: 762, spindleSpeed: 18000, stepDown: 0.508 },
+    { id: 'custom', label: 'Custom' }
+  ];
+
   var METRIC_DEFAULTS = {
     mode: 'target',
     materialWidth: 152.4,
@@ -254,6 +261,7 @@
     passExtension: 31.75,
     safeZ: 10.16,
     startCorner: 'bl',
+    bitPreset: 'face-2.5',
     isImperial: true
   };
 
@@ -380,6 +388,14 @@
             '<div style="display: flex; flex-direction: column; gap: 12px;">' +
               '<div class="form-card">' +
                 '<div class="form-card-title">Tool &amp; Machine</div>' +
+                '<div class="form-row single">' +
+                  '<div class="form-group">' +
+                    '<label for="bitPreset">Bit Preset</label>' +
+                    '<select id="bitPreset">' +
+                    BIT_PRESETS.map(function(p) { return '<option value="' + p.id + '"' + (settings.bitPreset === p.id ? ' selected' : '') + '>' + p.label + '</option>'; }).join('') +
+                    '</select>' +
+                  '</div>' +
+                '</div>' +
                 '<div class="form-row">' +
                   '<div class="form-group">' +
                     '<label for="bitDiameter">Bit Diameter (<span class="du">' + du + '</span>)</label>' +
@@ -711,6 +727,22 @@
       updateSummary();
     });
 
+    document.getElementById('bitPreset').addEventListener('change', function() {
+      var presetId = this.value;
+      var preset = BIT_PRESETS.find(function(p) { return p.id === presetId; });
+      if (!preset || presetId === 'custom') return;
+      var toDisplay = function(v) { return isImperial ? parseFloat((v * MM_TO_INCH).toFixed(4)) : v; };
+      var fields = { bitDiameter: preset.bitDiameter, feedRate: preset.feedRate, plungeRate: preset.plungeRate, stepDown: preset.stepDown };
+      Object.keys(fields).forEach(function(f) {
+        var input = document.getElementById(f);
+        if (input) input.value = toDisplay(fields[f]);
+      });
+      document.getElementById('stepoverPct').value = preset.stepoverPct;
+      document.getElementById('spindleSpeed').value = preset.spindleSpeed;
+      updateStepoverCalc();
+      updateSummary();
+    });
+
     var allValidatedFields = ['materialWidth', 'materialDepth', 'stockHeight', 'targetThickness', 'removeAmount', 'bitDiameter', 'stepoverPct', 'feedRate', 'plungeRate', 'spindleSpeed', 'stepDown', 'passExtension', 'safeZ'];
     allValidatedFields.forEach(function(f) {
       var input = document.getElementById(f);
@@ -890,6 +922,7 @@
       s.spindleSpeed = params.spindleSpeed;
       s.spindleDelay = params.spindleDelay;
       s.startCorner = params.startCorner;
+      s.bitPreset = document.getElementById('bitPreset').value;
 
       await fetch(BASE_URL + '/api/plugins/' + PLUGIN_ID + '/settings', {
         method: 'PUT',
