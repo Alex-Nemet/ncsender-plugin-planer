@@ -1,5 +1,4 @@
 ## What's Changed
 
 ### 🔧 Improvements
-- Split pass extension into separate X and Y controls for more precise machining adjustments
-- Changed default spindle delay to 6 seconds for improved startup timing
+- Pass extension now automatically sets to 55% of the bit diameter when changing presets
