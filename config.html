@@ -747,6 +747,10 @@
       });
       document.getElementById('stepoverPct').value = preset.stepoverPct;
       document.getElementById('spindleSpeed').value = preset.spindleSpeed;
+      var passExt = parseFloat((preset.bitDiameter * 0.55).toFixed(4));
+      var passExtDisplay = toDisplay(passExt);
+      document.getElementById('passExtensionX').value = passExtDisplay;
+      document.getElementById('passExtensionY').value = passExtDisplay;
       updateStepoverCalc();
       updateSummary();
     });
