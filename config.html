@@ -663,7 +663,7 @@
         var sh = parseFloat(document.getElementById('stockHeight').value);
         var tt = parseFloat(document.getElementById('targetThickness').value);
         var tape = parseFloat(document.getElementById('tapeThickness').value) || 0;
-        totalRemove = sh - tt - tape;
+        totalRemove = sh - tt;
       } else {
         totalRemove = parseFloat(document.getElementById('removeAmount').value);
       }
@@ -794,9 +794,9 @@
         var stockH = params.stockHeight;
         var targetT = params.targetThickness;
         var tape = params.tapeThickness || 0;
-        startZ = stockH;
+        startZ = stockH + tape;
         endZ = targetT + tape;
-        totalRemove = startZ - endZ;
+        totalRemove = stockH - targetT;
         safeZAbs = startZ + safeZClearance;
       } else {
         var removeAmt = params.removeAmount;
