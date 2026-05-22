@@ -137,25 +137,8 @@
     justify-content: center;
     margin-bottom: 16px;
   }
-  .units-toggle {
-    display: flex;
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-small);
-    overflow: hidden;
-  }
-  .unit-btn {
-    padding: 8px 20px;
-    border: none;
-    background: var(--color-surface-muted);
-    color: var(--color-text-primary);
-    cursor: pointer;
-    font-size: 0.85rem;
-    font-weight: 500;
-    transition: background 0.2s, color 0.2s;
-  }
-  .unit-btn.active {
-    background: var(--color-accent);
-    color: white;
+  .units-bar select {
+    min-width: 180px;
   }
   .mode-hint {
     font-size: 0.75rem;
@@ -310,10 +293,10 @@
       '<div class="form-column">' +
         '<form id="planerForm" novalidate>' +
           '<div class="units-bar">' +
-            '<div class="units-toggle">' +
-              '<button type="button" class="unit-btn' + (isImperial ? ' active' : '') + '" data-unit="imperial">Imperial (in)</button>' +
-              '<button type="button" class="unit-btn' + (!isImperial ? ' active' : '') + '" data-unit="metric">Metric (mm)</button>' +
-            '</div>' +
+            '<select id="unitSelect">' +
+              '<option value="imperial"' + (isImperial ? ' selected' : '') + '>Imperial (in)</option>' +
+              '<option value="metric"' + (!isImperial ? ' selected' : '') + '>Metric (mm)</option>' +
+            '</select>' +
           '</div>' +
           '<div class="form-cards-container">' +
             '<div style="display: flex; flex-direction: column; gap: 12px;">' +
@@ -715,18 +698,12 @@
       document.querySelectorAll('.du').forEach(function(el) { el.textContent = du; });
       document.querySelectorAll('.fu').forEach(function(el) { el.textContent = fu; });
 
-      document.querySelectorAll('.unit-btn').forEach(function(btn) {
-        btn.classList.toggle('active', btn.getAttribute('data-unit') === (isImperial ? 'imperial' : 'metric'));
-      });
-
       updateStepoverCalc();
       updateSummary();
     }
 
-    document.querySelectorAll('.unit-btn').forEach(function(btn) {
-      btn.addEventListener('click', function() {
-        toggleUnits(btn.getAttribute('data-unit') === 'imperial');
-      });
+    document.getElementById('unitSelect').addEventListener('change', function() {
+      toggleUnits(this.value === 'imperial');
     });
 
     document.getElementById('mode').addEventListener('change', function() {
@@ -824,6 +801,10 @@
         gcode.push('');
       }
 
+      var product = xSign * ySign;
+      var arcAtXEnd = product > 0 ? 'G2' : 'G3';
+      var arcAtXStart = product > 0 ? 'G3' : 'G2';
+
       for (var pass = 0; pass < numPasses; pass++) {
         var z;
         if (params.mode === 'target') {
@@ -841,7 +822,13 @@
           var yPos = yStart + Math.min(row * stepover, totalYDist) * ySign;
 
           if (row > 0) {
-            gcode.push('G1 Y' + yPos.toFixed(prec) + ' F' + feedRate);
+            var yPrev = yStart + Math.min((row - 1) * stepover, totalYDist) * ySign;
+            var actualStep = Math.abs(yPos - yPrev);
+            var jVal = (actualStep / 2) * ySign;
+            var atXEnd = (row % 2 === 1);
+            var arcCmd = atXEnd ? arcAtXEnd : arcAtXStart;
+            var arcX = atXEnd ? xEnd : xStart;
+            gcode.push(arcCmd + ' X' + arcX.toFixed(prec) + ' Y' + yPos.toFixed(prec) + ' I0 J' + jVal.toFixed(prec) + ' F' + feedRate);
           }
 
           var xTarget = (row % 2 === 0) ? xEnd : xStart;
