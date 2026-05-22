@@ -1,0 +1,22 @@
+{
+  "id": "com.ncsender.planer",
+  "name": "Planer",
+  "version": "0.1.0",
+  "minAppVersion": "0.3.19",
+  "author": "Alex Nemet",
+  "description": "Surface planer and stock thickness reducer",
+  "entry": "index.js",
+  "configUi": "config.html",
+  "category": "gcode-generator",
+  "repository": "https://github.com/Alex-Nemet/ncsender-plugin-planer",
+  "platforms": {
+    "v1": "0.3.19",
+    "pro-v1": "0.3.19",
+    "pro-v2": "2.0.0"
+  },
+  "events": [],
+  "permissions": ["gcode.modify"],
+  "toolMenu": [
+    { "id": "open-config", "label": "Planer", "clientOnly": true }
+  ]
+}
